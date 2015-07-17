@@ -28,16 +28,33 @@ class yahooSpider(scrapy.Spider):
     def parse(self, response):
         self.driver.get("http://news.yahoo.com/")
         try:
+            for i in range(2):
+                self.addNews()
+            newsList = self.driver.find_elements_by_xpath('//div[@id="Main"]//ul/li/div[@class = "wrapper cf"]')
+            print "news size is :" + str(len(newsList))
+        except:
+            print "!!!!!!!!!!!!!!!!!!!!!!ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! add news eroor"
+            raise
             
-            newsList = self.driver.find_elements_by_xpath('//div[@id="Main"]//ul/li/div[@class = "wrapper cf"]')
-            print len(newsList)
-            self.addNews()
-            newsList = self.driver.find_elements_by_xpath('//div[@id="Main"]//ul/li/div[@class = "wrapper cf"]')
-            print len(newsList)
-            self.addNews()
+        #start pase news
+        try:
             for news_item in  newsList:
-                news_title = news_item.find_element_by_xpath('.//div[@class = "body-wrap"]/h3/a').text
+                #print article title
+                #news_title = news_item.find_element_by_xpath('.//div[@class = "body-wrap"]/h3/a').text
                 #print news_title
+                
+                #check url is sponser URL(facebook)
+                news_sponsor = news_item.find_elements_by_xpath('.//div[@class = "body classical"]/a')
+                
+                if len(news_sponsor)>1 and "Sponsored" in news_sponsor[1].text:
+                    print "this news is a Sponsored news : " + news_item.find_element_by_xpath('.//div[@class = "body-wrap"]/h3/a').text
+                    continue
+            
+                #get news URL
+                news_url = news_item.find_element_by_xpath('.//div[@class = "body-wrap"]/h3/a').get_attribute("href")
+                
+                news_url = self.start_urls[0][:-1] + news_url
+                
         except:
             raise
         finally:
